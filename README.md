@@ -1,979 +1,512 @@
-# CareerScoutsv1.0
+# CareerScout v 1.0
 CareerScout
 
-Technical Requirements & Design Document (TRD)
+An automated, explainable job discovery and matching platform built with Java and Spring Boot.
 
-Version 1.0
+CareerScout continuously discovers relevant jobs and internships from permitted original company career sources and ATS platforms, analyzes their requirements, compares them against a user's resume and preferences, and delivers actionable job recommendations.
 
----
+The system is designed as a production-oriented backend project with an emphasis on automation, explainable matching, clean architecture, security, and scalability.
 
-1. Document Purpose
+Overview
 
-This document defines the technical architecture and implementation strategy for CareerScout, an automated job discovery, resume analysis, job matching, and email notification platform.
+Searching for jobs manually across company career pages, ATS platforms, and multiple job boards is time-consuming. CareerScout automates the discovery and analysis process.
 
-The TRD translates the requirements defined in the PRD into:
+The system:
 
-- System architecture
-- Backend architecture
-- Technology stack
-- Modules
-- Database design
-- API design
-- Job-source architecture
-- Resume-processing pipeline
-- Matching engine
-- Scheduling
-- Email architecture
-- Security
-- Testing
-- Deployment
-- Scalability strategy
+1. Accepts and processes a user's resume.
+2. Builds a structured candidate profile.
+3. Stores the user's skills, education, experience, and preferences.
+4. Discovers newly posted jobs from permitted sources.
+5. Normalizes and deduplicates job data.
+6. Extracts structured requirements from job descriptions.
+7. Compares jobs against the candidate profile.
+8. Identifies matched and missing requirements.
+9. Generates an explainable match result.
+10. Provides an application checklist and original application source.
+11. Sends relevant opportunities through email.
+12. Runs automatically on a scheduled basis.
 
----
+CareerScout does not automatically submit applications. The final application decision and submission remain under the user's control.
 
-2. System Objective
+Core Workflow
 
-CareerScout will continuously collect jobs from permitted external sources, convert them into a common internal format, analyze their requirements, compare them with a user's structured profile/resume, and produce explainable recommendations.
+                    USER RESUME
+                         |
+                         v
+                 Resume Processing
+                         |
+                         v
+               Structured Candidate
+                     Profile
+                         |
+                         v
+                 User Preferences
+                         |
+                         v
+               Job Discovery Engine
+                         |
+          +--------------+--------------+
+          |              |              |
+          v              v              v
+       ATS Source     Career Page      API/Feed
+          |              |              |
+          +--------------+--------------+
+                         |
+                         v
+                  Job Normalization
+                         |
+                         v
+                   Deduplication
+                         |
+                         v
+                Requirement Extraction
+                         |
+                         v
+                  Matching Engine
+                         |
+                         v
+               Explainable Job Match
+                         |
+              +----------+----------+
+              |                     |
+              v                     v
+        Application            Skill Gap
+        Requirements             Analysis
+              |                     |
+              +----------+----------+
+                         |
+                         v
+                  Relevant Jobs
+                         |
+                         v
+                  Email Notification
+                         |
+                         v
+             Original Application Source
+                         |
+                         v
+                   User Decision
 
-The core technical pipeline is:
+Key Features
 
-External Job Sources
-        ↓
-Source Connectors
-        ↓
-Job Ingestion
-        ↓
+Resume Intelligence
+
+CareerScout processes supported resume documents and extracts structured information such as:
+
+- Technical skills
+- Programming languages
+- Frameworks
+- Databases
+- Education
+- Experience
+- Projects
+- Certifications
+
+Extracted information can be reviewed and corrected by the user before being used by the matching engine.
+
+Automated Job Discovery
+
+The job discovery engine is designed to work with permitted sources such as:
+
+- Company career platforms
+- Company ATS platforms
+- Official APIs
+- Public feeds
+- Other permitted job sources
+
+The system uses a connector-based architecture so additional sources can be integrated without changing the core job-processing logic.
+
+JobSourceConnector
+        |
+        +-- ATS Connector
+        +-- API Connector
+        +-- Feed Connector
+        +-- Career Page Connector
+        +-- Future Connectors
+
+CareerScout does not bypass authentication, CAPTCHA, anti-bot mechanisms, access controls, or source restrictions.
+
 Job Normalization
-        ↓
+
+Different sources can represent the same information differently.
+
+CareerScout normalizes:
+
+- Job titles
+- Company names
+- Skills
+- Locations
+- Employment types
+- Work modes
+- Experience levels
+- Application URLs
+- Dates
+
+This creates a consistent internal representation of job data.
+
 Duplicate Detection
-        ↓
+
+The system prevents the same opportunity from appearing multiple times.
+
+Deduplication can use:
+
+Source + External Job ID
+        |
+Canonical Application URL
+        |
+Company + Job Title + Location
+        |
+Similarity Checks
+
 Requirement Extraction
-        ↓
-Job Database
-        ↓
-Matching Engine
-        ↑
-User Profile + Resume
-        ↓
-Match Results
-        ↓
+
+Job descriptions are converted into structured requirements.
+
+Example:
+
+Job Description
+       |
+       v
+Text Processing
+       |
+       v
+Requirement Extraction
+       |
+       +-- Skills
+       +-- Experience
+       +-- Education
+       +-- Eligibility
+       +-- Location
+       +-- Other Requirements
+       |
+       v
+Required / Preferred Classification
+
+The system distinguishes between required and preferred requirements wherever the source provides enough information to do so.
+
+Explainable Matching
+
+CareerScout does not rely on a simple keyword count.
+
+A match result can contain:
+
+Match Score
+
+Matched Skills
+Missing Skills
+
+Matched Requirements
+Missing Requirements
+
+Preference Matches
+
+Eligibility Status
+
+Explanation
+
+Example:
+
+Job: Backend Developer
+
+Matched:
+- Java
+- Spring Boot
+- SQL
+- REST APIs
+
+Missing:
+- Redis
+
+Preferences:
+- Backend Development: Match
+- Remote: Match
+- Full-Time: Match
+
+Eligibility:
+- Education requirement satisfied
+
+Explanation:
+Strong alignment with the technical requirements, with Redis
+being the primary identified skill gap.
+
+The matching engine is initially rule-based and explainable. Future versions may use semantic or AI-assisted techniques for tasks such as skill normalization and requirement extraction.
+
+AI is not intended to be the source of truth for factual job information such as application URLs, job identifiers, dates, or employer-provided requirements.
+
+Application Intelligence
+
+For every relevant job, CareerScout can identify important information needed before applying, including:
+
+- Required skills
+- Education requirements
+- Experience requirements
+- Eligibility criteria
+- Location requirements
+- Employment type
+- Work mode
+- Other stated requirements
+
+The system also provides the original application source so the user can review the opportunity and apply directly.
+
+Email Notifications
+
+CareerScout can deliver relevant job recommendations through email.
+
+The notification pipeline is:
+
+Job Match
+    |
+    v
 Notification Service
-        ↓
-Email
+    |
+    v
+Email Template
+    |
+    v
+Email Provider
+    |
+    v
+User
 
----
+The email system is designed behind an internal email abstraction so the provider can be changed without affecting the rest of the application.
 
-3. Architecture Decision
-
-Initial Architecture: Modular Monolith
-
-CareerScout will initially be built as a modular monolith, not microservices.
-
-This is intentional.
-
-The application will have clearly separated modules inside one Spring Boot application.
-
-CareerScout
-│
-├── Authentication
-├── User/Profile
-├── Resume
-├── Job Discovery
-├── Job Processing
-├── Matching
-├── Application Tracking
-├── Notifications
-└── Administration
-
-Why?
-
-A modular monolith allows us to:
-
-- Build faster.
-- Understand the complete backend.
-- Maintain simpler deployment.
-- Avoid unnecessary distributed-system complexity.
-- Keep module boundaries clear.
-- Split modules into microservices later if scale requires it.
-
----
-
-4. Technology Stack
+Technology Stack
 
 Backend
 
-Language: Java
-
-Framework: Spring Boot
-
-Build Tool: Maven
-
----
-
-Web/API
-
+- Java
+- Spring Boot
 - Spring Web
-- RESTful APIs
-- JSON
-
----
+- Spring Data JPA
+- Hibernate
+- Spring Security
+- Jakarta Bean Validation
 
 Database
 
-Primary database: PostgreSQL
-
-ORM: Spring Data JPA / Hibernate
-
----
-
-Security
-
-- Spring Security
-- Token-based authentication
-- Password hashing
-
----
-
-Validation
-
-- Jakarta Bean Validation
-
-Examples:
-
-@NotBlank
-@Email
-@Size
-@NotNull
-
----
+- PostgreSQL
 
 Testing
 
 - JUnit
 - Mockito
 - Spring Boot Test
-- Integration testing
+- Integration Testing
 
----
+Development
 
-Documentation
-
-OpenAPI/Swagger-compatible API documentation.
-
----
-
-Version Control
-
-Git + GitHub
-
----
-
-Containerization
-
-Docker
-
----
+- Maven
+- Git
+- GitHub
+- Docker
+- Docker Compose
+- OpenAPI / Swagger
 
 Email
 
-A transactional email provider such as Resend can be integrated for production email delivery.
-
-The email layer will be abstracted so the provider can be changed later.
-
----
+- Transactional email provider
+- Resend integration planned
 
 Future Technologies
 
-Potential future additions:
+Depending on scale and requirements:
 
 - Redis
 - Message queues
+- Elasticsearch / OpenSearch
 - Object storage
-- Elasticsearch/OpenSearch
-- AI/LLM services
+- AI/LLM-assisted processing
+- Advanced observability
 
-These are not mandatory for MVP.
+Architecture
 
----
+CareerScout initially follows a modular monolith architecture.
 
-5. High-Level System Architecture
+                    Spring Boot Application
+                            |
+        +-------------------+-------------------+
+        |                   |                   |
+        v                   v                   v
+     Authentication      User/Profile        Resume
+        |                   |                   |
+        +-------------------+-------------------+
+                            |
+                            v
+                    Job Discovery
+                            |
+                            v
+                    Job Processing
+                            |
+                            v
+                    Requirement Engine
+                            |
+                            v
+                    Matching Engine
+                            |
+             +--------------+--------------+
+             |                             |
+             v                             v
+       Application                    Notification
+             |                             |
+             +--------------+--------------+
+                            |
+                            v
+                        PostgreSQL
 
-                    ┌─────────────────┐
-                    │     Client      │
-                    │ Web / Mobile UI │
-                    └────────┬────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │   REST API      │
-                    │ Spring Web      │
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼─────────────────────┐
-        │                    │                     │
-        ▼                    ▼                     ▼
- Authentication       User/Profile            Jobs
-        │                    │                     │
-        │                    │             ┌───────┴────────┐
-        │                    │             │ Job Processing │
-        │                    │             └───────┬────────┘
-        │                    │                     │
-        │                    │                     ▼
-        │                    │              Matching Engine
-        │                    │                     │
-        └────────────────────┼─────────────────────┘
-                             │
-                             ▼
-                       PostgreSQL
-                             │
-                             ▼
-                    Notification Service
-                             │
-                             ▼
-                         Email Provider
+A modular monolith keeps the initial system easier to develop, test, deploy, and maintain while allowing individual components to be separated into services later if scaling requirements justify it.
 
----
-
-6. Module Architecture
-
-The backend will be divided into logical modules.
-
-6.1 Authentication Module
-
-Responsibilities:
-
-- Registration
-- Login
-- Password hashing
-- Token generation
-- Authentication
-- Authorization
-- Role management
-
----
-
-6.2 User Module
-
-Responsibilities:
-
-- User profile
-- Preferences
-- Account settings
-- User status
-
----
-
-6.3 Resume Module
-
-Responsibilities:
-
-- Resume upload
-- Resume storage
-- Text extraction
-- Structured data extraction
-- Resume version management
-
----
-
-6.4 Job Discovery Module
-
-Responsibilities:
-
-- Source connectors
-- Job retrieval
-- Scheduled discovery
-- Ingestion
-- Source tracking
-
----
-
-6.5 Job Processing Module
-
-Responsibilities:
-
-- Job normalization
-- Cleaning
-- Requirement extraction
-- Deduplication
-- Job classification
-
----
-
-6.6 Matching Module
-
-Responsibilities:
-
-- Resume/job comparison
-- Requirement matching
-- Preference matching
-- Match calculation
-- Match explanation
-- Skill-gap analysis
-
----
-
-6.7 Application Module
-
-Responsibilities:
-
-- Saved jobs
-- Application tracking
-- Application status
-- Application checklist
-
----
-
-6.8 Notification Module
-
-Responsibilities:
-
-- Email generation
-- Email preferences
-- Digest creation
-- Notification scheduling
-- Delivery tracking
-
----
-
-6.9 Administration Module
-
-Responsibilities:
-
-- User management
-- Source management
-- Job management
-- System monitoring
-
----
-
-7. Package Structure
-
-The initial Spring Boot project should follow a feature-oriented structure.
+Project Structure
 
 com.careerscout
-│
-├── auth
-│   ├── controller
-│   ├── service
-│   ├── repository
-│   ├── entity
-│   ├── dto
-│   └── security
-│
-├── user
-│   ├── controller
-│   ├── service
-│   ├── repository
-│   ├── entity
-│   └── dto
-│
-├── resume
-│   ├── controller
-│   ├── service
-│   ├── parser
-│   ├── entity
-│   └── dto
-│
-├── job
-│   ├── controller
-│   ├── service
-│   ├── repository
-│   ├── entity
-│   └── dto
-│
-├── discovery
-│   ├── connector
-│   ├── service
-│   └── scheduler
-│
-├── matching
-│   ├── service
-│   ├── engine
-│   └── dto
-│
-├── application
-│   ├── controller
-│   ├── service
-│   ├── repository
-│   └── entity
-│
-├── notification
-│   ├── service
-│   ├── email
-│   └── scheduler
-│
-├── common
-│   ├── exception
-│   ├── response
-│   └── validation
-│
-└── config
+|
++-- auth
+|   +-- controller
+|   +-- service
+|   +-- repository
+|   +-- entity
+|   +-- dto
+|   +-- security
+|
++-- user
+|   +-- controller
+|   +-- service
+|   +-- repository
+|   +-- entity
+|   +-- dto
+|
++-- resume
+|   +-- controller
+|   +-- service
+|   +-- parser
+|   +-- entity
+|   +-- dto
+|
++-- job
+|   +-- controller
+|   +-- service
+|   +-- repository
+|   +-- entity
+|   +-- dto
+|
++-- discovery
+|   +-- connector
+|   +-- service
+|   +-- scheduler
+|
++-- matching
+|   +-- service
+|   +-- engine
+|   +-- dto
+|
++-- application
+|   +-- controller
+|   +-- service
+|   +-- repository
+|   +-- entity
+|
++-- notification
+|   +-- service
+|   +-- email
+|   +-- scheduler
+|
++-- common
+|   +-- exception
+|   +-- response
+|   +-- validation
+|
++-- config
 
----
+Main Domain Model
 
-8. Database Design
-
-The initial database will use PostgreSQL.
-
-Main entities:
+The primary entities are:
 
 User
-Profile
-Resume
-Skill
-UserSkill
+ |
+ +-- Profile
+ |
+ +-- Resume
+ |
+ +-- UserSkill
+ |       |
+ |       +-- Skill
+ |
+ +-- Application
+ |       |
+ |       +-- Job
+ |
+ +-- SavedJob
+ |
+ +-- JobMatch
+         |
+         +-- Job
+
 Company
+   |
+   +-- Job
+          |
+          +-- JobSkill
+          |
+          +-- JobRequirement
+          |
+          +-- JobSource
+
+Main Entities
+
+User
+
+Stores authentication and account information.
+
+Profile
+
+Stores structured candidate information and preferences.
+
+Resume
+
+Stores resume metadata, processing status, and references to stored resume data.
+
+Skill
+
+Stores canonical technical and professional skills.
+
+UserSkill
+
+Represents a relationship between a user and a normalized skill.
+
+Company
+
+Represents an employer.
+
 Job
-JobSkill
+
+Stores normalized job information.
+
 JobRequirement
+
+Stores structured requirements extracted from job descriptions.
+
+JobSkill
+
+Associates normalized skills with jobs.
+
 JobSource
+
+Represents the source from which a job was discovered.
+
 JobMatch
+
+Stores the result of comparing a user profile with a job.
+
 Application
+
+Tracks jobs the user has applied to and their application status.
+
 SavedJob
-NotificationPreference
-EmailLog
 
----
+Allows users to save opportunities for later.
 
-9. Entity Relationships
-
-High-level relationship:
-
-USER
- │
- ├────────── PROFILE
- │
- ├────────── RESUME
- │
- ├────────── USER_SKILL
- │                 │
- │                 ▼
- │               SKILL
- │
- ├────────── APPLICATION
- │                 │
- │                 ▼
- │                JOB
- │
- ├────────── SAVED_JOB
- │
- └────────── JOB_MATCH
-                   │
-                   ▼
-                  JOB
-
-
-COMPANY
-   │
-   └────────── JOB
-                 │
-                 ├── JOB_SKILL
-                 └── JOB_REQUIREMENT
-
-JOB
- │
- └── JOB_SOURCE
-
----
-
-10. User Entity
-
-Conceptual fields:
-
-User
-----
-id
-name
-email
-passwordHash
-role
-status
-createdAt
-updatedAt
-
-Roles:
-
-CANDIDATE
-ADMIN
-
-A recruiter/company role can be introduced if the product later expands into a two-sided platform.
-
----
-
-11. Profile Entity
-
-Profile
--------
-id
-userId
-headline
-location
-educationSummary
-experienceSummary
-createdAt
-updatedAt
-
-Detailed skills and experience should be represented using appropriate related entities rather than storing everything as one large text field.
-
----
-
-12. Skill Entity
-
-Skill
------
-id
-name
-normalizedName
-category
-
-Example:
-
-Java
-Spring Boot
-SQL
-PostgreSQL
-Docker
-AWS
-Git
-
----
-
-13. UserSkill Entity
-
-This represents the relationship between a user and a skill.
-
-UserSkill
----------
-id
-userId
-skillId
-proficiency
-source
-
-Possible source:
-
-RESUME
-USER_CONFIRMED
-MANUAL
-
-This allows us to distinguish automatically extracted skills from skills confirmed by the user.
-
----
-
-14. Resume Entity
-
-Resume
-------
-id
-userId
-fileName
-fileType
-storageReference
-parsedText
-version
-status
-createdAt
-
-Possible status:
-
-UPLOADED
-PROCESSING
-PROCESSED
-FAILED
-
----
-
-15. Company Entity
-
-Company
--------
-id
-name
-website
-description
-industry
-createdAt
-updatedAt
-
----
-
-16. Job Entity
-
-Job
----
-id
-externalJobId
-companyId
-sourceId
-title
-description
-location
-workMode
-employmentType
-experienceLevel
-postedAt
-deadline
-applicationUrl
-status
-createdAt
-updatedAt
-
----
-
-17. Job Requirement Entity
-
-JobRequirement
---------------
-id
-jobId
-type
-name
-value
-importance
-sourceText
-
-Requirement type could include:
-
-SKILL
-EDUCATION
-EXPERIENCE
-ELIGIBILITY
-LOCATION
-OTHER
-
-Importance:
-
-REQUIRED
-PREFERRED
-
----
-
-18. Job Skill Entity
-
-JobSkill
---------
-id
-jobId
-skillId
-required
-
-This allows efficient comparison between:
-
-User Skills
-      ↕
-Job Skills
-
----
-
-19. Job Source Entity
-
-JobSource
----------
-id
-name
-sourceType
-baseUrl
-active
-lastSuccessfulSync
-createdAt
-
-Examples of source types:
-
-ATS
 API
-FEED
-CAREER_PAGE
 
----
-
-20. Source Connector Architecture
-
-This is one of the most important technical decisions.
-
-We will define an abstraction such as:
-
-JobSourceConnector
-        │
-        ├── Connector A
-        ├── Connector B
-        ├── Connector C
-        └── Future Connector
-
-Conceptually:
-
-interface JobSourceConnector {
-
-    fetchJobs()
-
-    fetchJobDetails()
-
-    supports(source)
-
-}
-
-Each connector converts external source data into our internal job model.
-
-This means adding another permitted source should not require rewriting the matching engine.
-
----
-
-21. Job Ingestion Pipeline
-
-Scheduler
-   ↓
-Select Active Sources
-   ↓
-Connector
-   ↓
-Fetch Jobs
-   ↓
-Validate Data
-   ↓
-Normalize Data
-   ↓
-Check Duplicate
-   ↓
-Store Job
-   ↓
-Extract Requirements
-   ↓
-Ready for Matching
-
----
-
-22. Job Deduplication
-
-Potential duplicate identifiers:
-
-1. Source + external job ID
-2. Canonical application URL
-3. Company + normalized title + location
-4. Additional similarity checks
-
-The system should prefer deterministic identifiers before using more expensive similarity logic.
-
----
-
-23. Resume Processing Pipeline
-
-Resume Upload
-      ↓
-File Validation
-      ↓
-Text Extraction
-      ↓
-Text Cleaning
-      ↓
-Section Detection
-      ↓
-Skill Extraction
-      ↓
-Education Extraction
-      ↓
-Experience Extraction
-      ↓
-Structured Profile
-      ↓
-User Confirmation
-
----
-
-24. Resume Parser Design
-
-The parser should have separate responsibilities.
-
-ResumeParser
-     │
-     ├── TextExtractor
-     ├── SectionParser
-     ├── SkillExtractor
-     ├── EducationExtractor
-     └── ExperienceExtractor
-
-This keeps the system replaceable.
-
-For example, if we later introduce an AI-powered extractor, the rest of the system should not need major changes.
-
----
-
-25. Requirement Extraction Pipeline
-
-Job Description
-       ↓
-Text Cleaning
-       ↓
-Section Detection
-       ↓
-Requirement Extraction
-       ↓
-Skill Normalization
-       ↓
-Required / Preferred Classification
-       ↓
-Experience Extraction
-       ↓
-Education Extraction
-       ↓
-Eligibility Extraction
-       ↓
-Structured Job Requirements
-
----
-
-26. Skill Normalization
-
-Different employers may use different names for similar technologies.
-
-For example:
-
-Spring Boot
-SpringBoot
-Spring Boot Framework
-
-should map to an appropriate canonical skill representation.
-
-Likewise:
-
-Postgres
-PostgreSQL
-
-may map to:
-
-PostgreSQL
-
-A controlled skill dictionary/taxonomy should be introduced.
-
----
-
-27. Matching Engine
-
-The matching engine compares:
-
-User Profile
-+
-Confirmed Skills
-+
-Experience
-+
-Education
-+
-Preferences
-
-        VS
-
-Job Requirements
-
-It should produce:
-
-JobMatch
---------
-matchScore
-matchedSkills
-missingSkills
-matchedRequirements
-missingRequirements
-preferenceMatches
-eligibilityStatus
-explanation
-
----
-
-28. Matching Strategy
-
-The initial matching engine should be rule-based and explainable.
-
-Example conceptual evaluation:
-
-Required skills       → evaluate
-Preferred skills      → evaluate
-Experience            → evaluate
-Education             → evaluate
-Eligibility           → evaluate
-Preferences           → evaluate
-
-The final score should be calculated from clearly documented rules.
-
-The exact weights will be configurable rather than hard-coded throughout the application.
-
----
-
-29. Hard Requirements vs Soft Requirements
-
-This distinction is critical.
-
-Hard requirement
-
-Example:
-
-Must have Bachelor's degree
-
-If the user does not meet it, the system should flag it clearly.
-
-Soft/preferred requirement
-
-Example:
-
-Docker is a plus
-
-Missing Docker should not be treated the same way as missing a mandatory requirement.
-
----
-
-30. Match Explanation
-
-The matching engine must produce evidence.
-
-Example:
-
-Match Analysis
-
-Required Skills:
-Java             MATCH
-Spring Boot      MATCH
-SQL              MATCH
-Docker           MISSING
-
-Experience:
-Entry-level      MATCH
-
-Education:
-Bachelor's       MATCH
-
-Preferences:
-Backend          MATCH
-Remote           MATCH
-
-This explanation should be generated from structured data, not merely from an opaque AI response.
-
----
-
-31. AI Usage Strategy
-
-AI may be introduced where traditional deterministic rules are insufficient.
-
-Potential AI use cases:
-
-- Resume information extraction
-- Job requirement extraction
-- Semantic skill matching
-- Similar-skill identification
-- Natural-language explanation
-
-AI should not be the source of truth for:
-
-- Application URLs
-- Job IDs
-- Dates
-- Employer-provided requirements
-- Eligibility facts
-
-Those should come from structured source data whenever possible.
-
----
-
-32. REST API Design
-
-Initial API groups:
+The backend exposes versioned REST APIs.
 
 /api/v1/auth
 /api/v1/users
@@ -985,57 +518,37 @@ Initial API groups:
 /api/v1/saved-jobs
 /api/v1/notifications
 
----
-
-33. Authentication APIs
+Authentication
 
 POST /api/v1/auth/register
 POST /api/v1/auth/login
 
-Future:
-
-POST /api/v1/auth/refresh
-POST /api/v1/auth/logout
-
----
-
-34. Resume APIs
+Resume
 
 POST   /api/v1/resumes
 GET    /api/v1/resumes
 GET    /api/v1/resumes/{id}
 DELETE /api/v1/resumes/{id}
 
----
-
-35. Job APIs
+Jobs
 
 GET /api/v1/jobs
 GET /api/v1/jobs/{id}
 
-Filtering:
+Example filters:
 
 GET /api/v1/jobs?location=remote
 GET /api/v1/jobs?type=INTERNSHIP
 GET /api/v1/jobs?skill=JAVA
-
-Pagination:
-
 GET /api/v1/jobs?page=0&size=20
 
----
+Matching
 
-36. Matching APIs
-
-GET /api/v1/matches
-GET /api/v1/matches/{jobId}
+GET  /api/v1/matches
+GET  /api/v1/matches/{jobId}
 POST /api/v1/matches/recalculate
 
-The system should generally calculate matches asynchronously when large numbers of jobs are processed.
-
----
-
-37. Application APIs
+Applications
 
 POST   /api/v1/applications
 GET    /api/v1/applications
@@ -1043,744 +556,356 @@ GET    /api/v1/applications/{id}
 PATCH  /api/v1/applications/{id}/status
 DELETE /api/v1/applications/{id}
 
-The application entity represents the user's tracking of an external application.
-
-CareerScout does not initially submit the external application itself.
-
----
-
-38. Saved Job APIs
+Saved Jobs
 
 POST   /api/v1/saved-jobs/{jobId}
 GET    /api/v1/saved-jobs
 DELETE /api/v1/saved-jobs/{jobId}
 
----
+Automation
 
-39. Notification Architecture
+CareerScout is designed to operate automatically.
 
-Matching Engine
-      ↓
-Relevant Match
-      ↓
-Notification Queue/Service
-      ↓
-Email Template
-      ↓
-Email Provider
-      ↓
-User
-
-The email provider should be hidden behind an internal interface.
-
-Conceptually:
-
-EmailService
-     │
-     └── EmailProvider
-            │
-            └── Resend implementation
-
-This allows another provider to be substituted later.
-
----
-
-40. Scheduled Jobs
-
-Spring scheduling will initially be used.
-
-Possible scheduled processes:
+Scheduled workflows include:
 
 Job Discovery
-
-Runs periodically to discover new jobs.
-
+     |
+     v
 Job Processing
+     |
+     v
+Requirement Extraction
+     |
+     v
+Candidate Matching
+     |
+     v
+Notification Generation
+     |
+     v
+Email Delivery
 
-Processes newly ingested jobs.
+The scheduler allows the system to periodically check configured sources for new opportunities without requiring manual searches.
 
-Matching
+Security
 
-Matches new jobs against relevant user profiles.
+Security is a core part of the system because resumes and candidate profiles contain personal information.
 
-Email Digest
+Planned security measures include:
 
-Generates and sends scheduled recommendations.
+- Password hashing
+- Authentication
+- Authorization
+- Ownership validation
+- Input validation
+- Secure file handling
+- File type validation
+- File size restrictions
+- Protected API endpoints
+- Environment-based secrets
+- Secure database credentials
+- No sensitive credentials in source control
 
-Conceptually:
+Sensitive values such as passwords, tokens, and API keys must never be committed to GitHub.
 
-Every N hours
-     ↓
-Discover
-     ↓
-Process
-     ↓
-Match
-     ↓
-Notify
+Reliability
 
-The exact schedule will be configurable.
+External job sources can fail independently.
 
----
+CareerScout therefore treats source connectors independently:
 
-41. Security Architecture
+Source A → SUCCESS
+Source B → SUCCESS
+Source C → FAILED
+Source D → PARTIAL
 
-Security requirements include:
+A failure in one source should not prevent the remaining sources from being processed.
 
-- Password hashing.
-- Authentication.
-- Authorization.
-- Secure API endpoints.
-- Input validation.
-- File validation.
-- Access control.
-- Secure secrets management.
+The system records source synchronization status and failures for troubleshooting.
 
-Protected resources must verify the authenticated user's ownership.
+Responsible Source Access
 
-Example:
+CareerScout is intended to use job information only through permitted access methods.
 
-A user must not be able to request another user's resume merely by changing:
+The system does not attempt to:
 
-/resumes/123
+- Bypass CAPTCHA
+- Bypass authentication
+- Circumvent access controls
+- Evade anti-bot protections
+- Ignore API limits
+- Violate source terms
+- Automatically submit applications without user control
 
-to:
+Connectors should respect applicable source policies, rate limits, and technical restrictions.
 
-/resumes/124
+Testing Strategy
 
----
-
-42. File Security
-
-Resume uploads must be validated.
-
-Checks should include:
-
-- Allowed file types.
-- File size.
-- Filename handling.
-- Content validation.
-- Secure storage.
-- Access authorization.
-
-Uploaded files should not automatically be exposed publicly.
-
----
-
-43. Exception Handling
-
-The backend should use centralized exception handling.
-
-Example categories:
-
-ResourceNotFoundException
-ValidationException
-UnauthorizedException
-ForbiddenException
-DuplicateResourceException
-ExternalSourceException
-FileProcessingException
-
-The API should return consistent error responses.
-
-Example:
-
-{
-    "timestamp": "...",
-    "status": 400,
-    "error": "VALIDATION_ERROR",
-    "message": "Invalid resume file",
-    "path": "/api/v1/resumes"
-}
-
----
-
-44. Logging
-
-Important events should be logged.
-
-Examples:
-
-- Authentication events
-- Resume processing failures
-- Source connector failures
-- Job ingestion
-- Matching failures
-- Email failures
-
-Sensitive information such as passwords and tokens must never be logged.
-
----
-
-45. Testing Strategy
-
-Testing will occur at multiple levels.
+Testing is performed at multiple levels.
 
 Unit Tests
 
-Test:
+Focused on:
 
 - Matching rules
 - Skill normalization
-- Requirement classification
+- Requirement extraction
 - Validators
 - Services
+- Business logic
 
 Integration Tests
 
-Test:
+Focused on:
 
 - REST APIs
-- Database operations
+- PostgreSQL
 - Authentication
+- Repository operations
 - Job ingestion
+- Matching workflows
 
 End-to-End Testing
 
-Eventually test the complete workflow:
+The complete workflow will eventually be tested:
 
+Register
+   |
 Upload Resume
-→ Process
-→ Discover Job
-→ Extract Requirements
-→ Match
-→ Generate Notification
+   |
+Build Profile
+   |
+Discover Jobs
+   |
+Process Requirements
+   |
+Calculate Match
+   |
+Generate Recommendation
+   |
+Send Email
 
----
+Configuration
 
-46. API Documentation
-
-All public APIs should be documented.
-
-Documentation should include:
-
-- Endpoint
-- HTTP method
-- Authentication
-- Request body
-- Parameters
-- Response
-- Error responses
-
-OpenAPI-compatible documentation will be used.
-
----
-
-47. Database Indexing
-
-Indexes should eventually be added for frequently queried fields.
-
-Potential indexes:
-
-User.email
-Job.externalJobId
-Job.postedAt
-Job.status
-Job.companyId
-Job.sourceId
-Skill.normalizedName
-Application.userId
-JobMatch.userId
-JobMatch.jobId
-
-Indexes will be validated against actual query patterns rather than added blindly.
-
----
-
-48. Transaction Management
-
-Operations that modify multiple related entities should use appropriate transaction boundaries.
+Environment variables are used for sensitive configuration.
 
 Example:
-
-Create Application
-    ↓
-Validate Job
-    ↓
-Check Duplicate Application
-    ↓
-Save Application
-
-This should behave as one consistent database operation.
-
----
-
-49. Performance Strategy
-
-MVP:
-
-- PostgreSQL indexing
-- Pagination
-- Efficient queries
-- Batch processing
-- Avoid unnecessary database calls
-
-Later:
-
-- Redis caching
-- Async processing
-- Message queues
-- Search engine
-- Horizontal scaling
-
----
-
-50. Scalability Strategy
-
-Initial:
-
-Single Spring Boot application
-        +
-PostgreSQL
-
-Future:
-
-                    Load Balancer
-                         │
-             ┌───────────┼───────────┐
-             ▼           ▼           ▼
-          Backend     Backend     Backend
-             │           │           │
-             └───────────┼───────────┘
-                         │
-                    PostgreSQL
-                         │
-             ┌───────────┴───────────┐
-             ▼                       ▼
-          Redis                  Message Queue
-
-Microservices will only be introduced if there is a demonstrated need.
-
----
-
-51. Docker Architecture
-
-The application should eventually be containerized.
-
-Development environment:
-
-Docker Compose
-│
-├── CareerScout Backend
-└── PostgreSQL
-
-Future:
-
-Backend
-PostgreSQL
-Redis
-Message Broker
-
----
-
-52. CI/CD
-
-GitHub-based CI/CD should eventually perform:
-
-Push Code
-    ↓
-Build
-    ↓
-Run Tests
-    ↓
-Static Checks
-    ↓
-Build Docker Image
-    ↓
-Deploy
-
-Deployment strategy will depend on the hosting provider selected later.
-
----
-
-53. Configuration Management
-
-Environment-specific configuration should not be hard-coded.
-
-Examples:
 
 DATABASE_URL
 DATABASE_USERNAME
 DATABASE_PASSWORD
+
 JWT_SECRET
+
 EMAIL_API_KEY
-STORAGE_CONFIGURATION
 
-Secrets must be stored through environment/secret-management mechanisms rather than committed to Git.
+Secrets should be supplied through the environment or deployment secret manager rather than committed to the repository.
 
----
+Local Development
 
-54. Observability
+Prerequisites
 
-Future production version should provide:
+Install:
 
-- Application logs
-- Error monitoring
-- Health checks
-- Metrics
-- Job-source success/failure monitoring
-- Email delivery monitoring
+- Java
+- Maven
+- PostgreSQL
+- Git
+- Docker
 
-Spring Boot Actuator can be introduced for health and metrics.
+Clone
 
----
+git clone <repository-url>
+cd CareerScout
 
-55. Source Reliability
+Configure Environment
 
-External sources can fail or change format.
+Create the required environment variables for the local environment.
 
-Each connector should therefore support:
+Start PostgreSQL
 
-SUCCESS
-PARTIAL_SUCCESS
-FAILED
+Using Docker Compose:
 
-The system should record connector failures without stopping the entire job-discovery pipeline.
+docker compose up -d postgres
 
-One broken source should not prevent other sources from being processed.
+Run the Application
 
----
+./mvnw spring-boot:run
 
-56. Rate Limiting and Responsible Access
+On Windows:
 
-The discovery engine must:
+mvnw.cmd spring-boot:run
 
-- Respect source limits.
-- Avoid excessive requests.
-- Prefer official APIs/feeds when available.
-- Use reasonable synchronization intervals.
-- Respect applicable terms and access restrictions.
+The exact commands may change as the project evolves.
 
-The system must not bypass:
-
-- CAPTCHA
-- Authentication
-- Anti-bot mechanisms
-- Access controls
-
----
-
-57. Data Flow — Complete System
-
-                   ┌───────────────┐
-                   │    Resume     │
-                   └───────┬───────┘
-                           │
-                           ▼
-                    Resume Parser
-                           │
-                           ▼
-                    User Profile
-                           │
-                           │
-                           ▼
-                     MATCH ENGINE
-                           ▲
-                           │
-Job Sources → Connectors → Jobs
-                           │
-                           ▼
-                    Job Processor
-                           │
-                           ▼
-                 Job Requirements
-                           │
-                           ▼
-                     MATCH ENGINE
-                           │
-              ┌────────────┴────────────┐
-              ▼                         ▼
-        Match Results             Skill Gaps
-              │                         │
-              └────────────┬────────────┘
-                           ▼
-                     Notification
-                           │
-                           ▼
-                         Email
-
----
-
-58. Development Phases
+Development Roadmap
 
 Phase 1 — Foundation
 
-Learn/build:
-
-- Java fundamentals
-- OOP
-- Maven
-- Spring Boot basics
-- REST
-- PostgreSQL
-- JPA/Hibernate
-
-Build:
-
-- Project skeleton
-- Database connection
-- Basic user APIs
-
----
+- Spring Boot project
+- Maven configuration
+- PostgreSQL connection
+- Base package structure
+- User entity
+- Basic REST APIs
+- Exception handling
+- Validation
 
 Phase 2 — Authentication
-
-Build:
 
 - Registration
 - Login
 - Password hashing
-- Security
+- Authentication
 - Authorization
+- User ownership checks
 
----
+Phase 3 — Profile and Resume
 
-Phase 3 — Profile & Resume
-
-Build:
-
-- Profile
 - Resume upload
+- File validation
 - Resume text extraction
-- Structured resume data
+- Section detection
+- Skill extraction
+- Education extraction
+- Experience extraction
+- Candidate profile confirmation
 
----
+Phase 4 — Job Discovery
 
-Phase 4 — Job Engine
-
-Build:
-
-- Job entity
-- Source abstraction
-- First permitted connector
-- Job ingestion
-- Normalization
-- Deduplication
-
----
+- Job source model
+- Connector abstraction
+- Initial source connectors
+- Scheduled discovery
+- Job normalization
+- Duplicate detection
 
 Phase 5 — Requirement Engine
 
-Build:
-
+- Job description processing
 - Skill extraction
-- Requirement classification
+- Required/preferred classification
 - Experience extraction
 - Education extraction
-
----
+- Eligibility extraction
+- Skill normalization
 
 Phase 6 — Matching Engine
 
-Build:
+- Candidate-job comparison
+- Required requirement evaluation
+- Preferred requirement evaluation
+- Preference matching
+- Skill gap analysis
+- Explainable match results
 
-- Rule-based matching
-- Required/preferred distinction
-- Match score
-- Explainable results
-- Skill gaps
+Phase 7 — Automation and Email
 
----
-
-Phase 7 — Automation
-
-Build:
-
-- Scheduled discovery
-- Automatic processing
-- Automatic matching
-- Email digest
-
----
+- Scheduled matching
+- Notification preferences
+- Email templates
+- Email provider integration
+- Email delivery logging
 
 Phase 8 — Engineering Quality
 
-Add:
-
-- Unit tests
 - Integration tests
 - API documentation
 - Logging
-- Exception handling
-- Security hardening
-
----
+- Health checks
+- Metrics
+- Error monitoring
+- Performance improvements
 
 Phase 9 — Deployment
 
-Add:
-
-- Docker
+- Dockerization
 - CI/CD
 - Production database
-- Deployment
+- Environment configuration
 - Monitoring
+- Deployment
 
----
+Future Improvements
 
-59. MVP Technical Definition
+Potential future improvements include:
 
-The MVP technical system will contain:
+- Semantic skill matching
+- AI-assisted requirement extraction
+- More ATS connectors
+- Advanced search
+- Personalized job ranking based on user-defined preferences
+- Resume version comparison
+- Application analytics
+- Redis caching
+- Message queues
+- Elasticsearch/OpenSearch
+- Object storage
+- Distributed processing
+- Multi-user scaling
+- Advanced observability
 
-Java
-Spring Boot
-Spring Security
-REST APIs
-PostgreSQL
-JPA/Hibernate
-Maven
-JUnit/Mockito
-Git/GitHub
-Docker
-Email Provider
+These features will be introduced only when they solve an actual product or engineering requirement.
 
-with these major modules:
+Engineering Principles
 
-Auth
-User
-Resume
-Job
-Discovery
-Requirement Processing
-Matching
-Application Tracking
-Notification
+CareerScout follows several core principles:
 
----
+Explainability Over Black-Box Decisions
 
-60. Future Technical Evolution
+The system should explain why a job matched rather than returning only a number.
 
-CareerScout can evolve toward:
+Source Accuracy
 
-                    API Gateway
-                         │
-       ┌─────────────────┼──────────────────┐
-       ▼                 ▼                  ▼
- Resume Service     Job Service      Matching Service
-       │                 │                  │
-       ▼                 ▼                  ▼
- Resume Storage      Job DB             Match DB
-                         │
-                         ▼
-                    Search Engine
-                         │
-                         ▼
-                   Message Queue
-                         │
-                         ▼
-                 Notification Service
+Original employer and permitted ATS sources are preferred for job information and application destinations.
 
-This architecture is intentionally future-ready without forcing premature microservices.
+User Control
 
----
+The system recommends opportunities but does not make the final application decision.
 
-61. Key Engineering Principles
+Modular Design
 
-CareerScout will follow these principles:
+Each major domain has a clear responsibility and can evolve independently.
 
-1. Explainability
+Security by Design
 
-Recommendations should be explainable.
+Candidate information and credentials are treated as sensitive from the beginning.
 
-2. Modularity
+Scalability Without Premature Complexity
 
-Each major responsibility should have a clear boundary.
+The initial implementation uses a modular monolith. More complex infrastructure is introduced only when justified.
 
-3. Security First
+Testable Business Logic
 
-Resume and account data must be protected.
+Core matching and processing logic should remain independently testable.
 
-4. Source Transparency
+Project Status
 
-The original job source/application URL should be preserved.
+CareerScout is under active development.
 
-5. User Control
+Current development focus:
 
-The system recommends; the user decides whether to apply.
+Java Foundations
+        |
+        v
+Object-Oriented Programming
+        |
+        v
+Spring Boot Foundations
+        |
+        v
+Database Design
+        |
+        v
+Backend Implementation
+        |
+        v
+CareerScout Core Features
 
-6. Extensibility
+License
 
-Adding another permitted job source should not require rewriting the core system.
+License information will be added when the project is ready for public distribution.
 
-7. Testability
+Author
 
-Business logic should be testable independently.
-
-8. Production Mindset
-
-The project should be designed as a real application rather than a classroom CRUD demonstration.
-
----
-
-62. Final Technical Definition
-
-CareerScout will initially be implemented as a modular Spring Boot monolith backed by PostgreSQL.
-
-It will use:
-
-REST APIs
-Spring Security
-JPA/Hibernate
-Scheduled processing
-Source connector abstraction
-Resume processing pipeline
-Explainable matching engine
-Email notification service
-Automated testing
-Docker
-CI/CD
-
-The architecture will allow future integration of:
-
-Redis
-Message queues
-Search engines
-AI/LLM services
-Additional job sources
-Microservices
-
-without requiring a complete rewrite of the core product.
-
----
-
-63. Final System Contract
-
-The complete MVP must satisfy this technical workflow:
-
-USER
- ↓
-Authentication
- ↓
-Resume Upload
- ↓
-Resume Processing
- ↓
-Structured Profile
- ↓
-User Preferences
- ↓
-Scheduled Job Discovery
- ↓
-Source Connector
- ↓
-Job Normalization
- ↓
-Deduplication
- ↓
-Requirement Extraction
- ↓
-Matching Engine
- ↓
-Explainable Match
- ↓
-Application Requirements
- ↓
-Relevant Job
- ↓
-Email Notification
- ↓
-Original Application Source
- ↓
-USER DECISION
-
-This TRD is the technical baseline for CareerScout v1.0.
+Developed as a backend engineering project focused on building a practical, production-oriented job discovery and matching system using Java and Spring Boot.
