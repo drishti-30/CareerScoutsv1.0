@@ -2,7 +2,7 @@
 CareerScout
 
 Technical Requirements & Design Document (TRD)
-
+  
 Version 1.0
 
 ---
