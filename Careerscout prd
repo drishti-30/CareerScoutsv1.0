@@ -1,0 +1,870 @@
+CareerScout
+
+Product Requirements Document (PRD) — Version 1.0
+
+1. Product Overview
+
+Product Name: CareerScout
+
+Product Type: Automated Job Discovery, Resume Matching & Application Intelligence Platform
+
+Primary Goal:
+
+CareerScout is a personal job-discovery system that automatically discovers relevant job and internship opportunities from original company/ATS sources, analyzes their requirements, compares them with a user's resume and preferences, explains the match, identifies application requirements and gaps, and delivers relevant opportunities through email.
+
+The system is designed primarily for students, freshers, and early-career software developers, but its architecture should allow other users to use it later.
+
+---
+
+2. Problem Statement
+
+Finding suitable jobs manually is repetitive and time-consuming.
+
+A candidate may need to:
+
+1. Search multiple job boards.
+2. Visit individual company career pages.
+3. Check different ATS platforms.
+4. Read every job description.
+5. Determine whether they meet the requirements.
+6. Identify missing skills.
+7. Check eligibility conditions.
+8. Save application links.
+9. Track newly posted opportunities.
+10. Repeat the entire process every day.
+
+CareerScout aims to automate the repetitive discovery and analysis while keeping the final application decision under the user's control.
+
+---
+
+3. Product Vision
+
+«CareerScout continuously discovers relevant opportunities from their original sources, understands what each opportunity requires, compares those requirements with the user's resume and preferences, explains the match and gaps, and delivers actionable opportunities directly to the user.»
+
+The system should answer three questions:
+
+Question 1 — What jobs are available?
+
+Automatically discover new opportunities.
+
+Question 2 — Which ones are relevant to me?
+
+Compare the opportunity against the user's profile, resume and preferences.
+
+Question 3 — What do I need to apply?
+
+Provide a clear application checklist and identify missing requirements.
+
+---
+
+4. Target User
+
+The initial target user is:
+
+«A student/fresher or early-career software developer looking for internships, graduate roles, or entry-level backend/software-development positions.»
+
+The system should eventually support other career fields as well.
+
+---
+
+5. Core User Journey
+
+User creates account
+        ↓
+Uploads resume
+        ↓
+CareerScout analyzes resume
+        ↓
+User confirms extracted profile
+        ↓
+User selects job preferences
+        ↓
+CareerScout discovers jobs
+        ↓
+Jobs are normalized
+        ↓
+Requirements are extracted
+        ↓
+Resume + preferences are compared
+        ↓
+Jobs are classified
+        ↓
+Match explanation is generated
+        ↓
+Application requirements are identified
+        ↓
+Relevant opportunities appear in dashboard
+        ↓
+Email digest is sent
+        ↓
+User opens ORIGINAL application source
+        ↓
+User decides whether to apply
+
+---
+
+6. User Profile
+
+The system will maintain a structured profile for every user.
+
+6.1 Basic Information
+
+- Name
+- Email
+- Location
+
+6.2 Professional Information
+
+- Current education
+- Degree
+- Graduation year
+- Experience level
+- Skills
+- Projects
+- Certifications
+- Resume
+
+6.3 Job Preferences
+
+The user can specify:
+
+- Desired role
+- Desired industry
+- Job type
+- Internship/full-time preference
+- Preferred technologies
+- Preferred locations
+- Remote/hybrid/on-site preference
+- Experience range
+- Minimum/maximum salary where applicable
+
+These preferences will influence job relevance.
+
+---
+
+7. Resume Intelligence
+
+CareerScout must convert an uploaded resume into structured information.
+
+7.1 Resume Input
+
+The system should initially support common resume formats such as:
+
+- PDF
+- DOCX
+
+7.2 Information Extraction
+
+The system should attempt to identify:
+
+Skills
+
+Examples:
+
+- Java
+- Spring Boot
+- SQL
+- PostgreSQL
+- Git
+- Docker
+
+Education
+
+Examples:
+
+- Degree
+- Institution
+- Graduation year
+
+Experience
+
+Examples:
+
+- Internship
+- Full-time experience
+- Duration
+- Job title
+
+Projects
+
+Examples:
+
+- Project name
+- Technologies used
+- Description
+
+Certifications
+
+Examples:
+
+- Certification name
+- Issuing organization
+
+---
+
+8. Resume Verification
+
+Automatically extracted information should not be treated as perfect.
+
+The user must be able to review and correct the extracted information.
+
+Example:
+
+Detected Skills
+
+✓ Java
+✓ SQL
+✓ Git
+✓ Spring Boot
+
+Did we miss something?
+
+[Add Skill]
+
+The user's confirmed profile becomes the primary source for matching.
+
+---
+
+9. Job Discovery Engine
+
+CareerScout will periodically discover newly available opportunities.
+
+9.1 Sources
+
+The system should prioritize:
+
+1. Official company career sources.
+2. Company ATS-hosted job pages.
+3. Official APIs or feeds where available.
+4. Other permitted public job sources.
+
+The system must respect applicable:
+
+- Terms of service
+- Robots directives
+- Rate limits
+- API requirements
+- Access restrictions
+
+The application should not bypass authentication, anti-bot protections, CAPTCHAs, or other access controls.
+
+---
+
+10. ATS Integration
+
+CareerScout should be designed around a source connector architecture.
+
+Instead of writing one giant scraper, each supported source should have its own connector.
+
+Conceptually:
+
+Job Source
+    ↓
+Source Connector
+    ↓
+Raw Job
+    ↓
+Normalizer
+    ↓
+Standard Job Model
+
+Possible source categories may include ATS platforms such as:
+
+- Greenhouse
+- Lever
+- Workday
+- Other permitted ATS sources
+
+The exact integrations will be selected during technical design based on what access methods are legitimately available.
+
+---
+
+11. Job Normalization
+
+Different sources represent job information differently.
+
+CareerScout should convert them into one standardized internal format.
+
+For example:
+
+Job
+├── title
+├── company
+├── location
+├── jobType
+├── description
+├── requirements
+├── preferredSkills
+├── experienceRequirement
+├── educationRequirement
+├── salary
+├── postedDate
+├── deadline
+├── source
+└── applicationUrl
+
+This allows the matching engine to work consistently across different sources.
+
+---
+
+12. Duplicate Detection
+
+The same job may appear through multiple sources.
+
+CareerScout should detect likely duplicates.
+
+Example:
+
+Company: ABC
+Title: Backend Engineer Intern
+Location: Remote
+
+appearing through two different sources should not necessarily become two separate recommendations.
+
+The system should maintain the appropriate canonical/original application source when possible.
+
+---
+
+13. Job Requirement Extraction
+
+CareerScout should analyze each job description and identify:
+
+Required skills
+
+Skills explicitly required by the employer.
+
+Preferred skills
+
+Skills described as preferred, plus, bonus, or nice-to-have.
+
+Experience requirements
+
+Examples:
+
+- 0–1 years
+- 1+ years
+- 2+ years
+
+Education requirements
+
+Examples:
+
+- Bachelor's degree
+- Master's degree
+- Specific field of study
+
+Eligibility requirements
+
+Examples:
+
+- Student status
+- Graduation date
+- Work authorization
+- Geographic restrictions
+
+Other requirements
+
+Examples:
+
+- Relocation
+- Availability
+- Portfolio
+- GitHub
+- Resume
+- Certifications
+
+---
+
+14. Matching Engine
+
+The matching engine is the core of CareerScout.
+
+It compares:
+
+USER PROFILE
+      +
+RESUME
+      +
+USER PREFERENCES
+      ↓
+MATCHING ENGINE
+      ↑
+JOB REQUIREMENTS
+
+The system should evaluate multiple dimensions rather than relying solely on keyword matching.
+
+---
+
+15. Match Categories
+
+Each job should receive an understandable classification.
+
+For example:
+
+Strong Match
+
+Most important requirements match the user's profile.
+
+Potential Match
+
+Some important requirements match, but there are meaningful gaps.
+
+Low Match
+
+Important requirements do not match.
+
+These categories are informational and should be accompanied by the underlying evidence.
+
+---
+
+16. Match Explanation
+
+Every recommendation should explain why it was selected.
+
+Example:
+
+Match Analysis
+
+Matched:
+✓ Java
+✓ SQL
+✓ REST APIs
+✓ Git
+✓ Spring Boot
+
+Missing:
+△ Docker
+
+Experience:
+✓ Matches entry-level requirement
+
+Education:
+✓ Matches stated requirement
+
+Preference:
+✓ Backend role
+✓ Remote
+
+The user should never have to trust an unexplained number.
+
+---
+
+17. Match Score
+
+A numerical match score may be displayed as a supplementary signal.
+
+Example:
+
+Match: 84%
+
+However, the score must be explainable.
+
+The system should distinguish between:
+
+- Required requirements
+- Preferred requirements
+- User preferences
+- Hard eligibility conditions
+
+A missing mandatory eligibility requirement should not be hidden by a high skill similarity score.
+
+---
+
+18. Application Intelligence
+
+For each relevant job, CareerScout should answer:
+
+«What do I need to apply?»
+
+The system should extract an application checklist.
+
+Example:
+
+Application Checklist
+
+✓ Resume
+✓ Bachelor's degree
+✓ Java experience
+✓ GitHub/profile
+△ Spring Boot knowledge
+
+Application:
+Original company/ATS application page
+
+Requirements should be labeled according to whether they were explicitly stated by the employer or inferred from the job description.
+
+---
+
+19. Skill Gap Analysis
+
+CareerScout should identify useful gaps between the user's profile and the job.
+
+Example:
+
+Job requires:
+
+Java        ✓
+Spring Boot  ✓
+SQL         ✓
+Docker       ✗
+AWS          ✗
+
+Skill Gap:
+Docker
+AWS
+
+The system can later provide learning suggestions, but it should not falsely imply that learning a missing skill guarantees qualification.
+
+---
+
+20. Job Dashboard
+
+The dashboard should allow the user to view discovered opportunities.
+
+Each job card should display:
+
+- Job title
+- Company
+- Location
+- Job type
+- Posted date
+- Match information
+- Key matched skills
+- Important gaps
+- Application requirements
+- Original application link
+
+---
+
+21. Filtering
+
+Users should be able to filter jobs by:
+
+- Role
+- Location
+- Remote/hybrid/on-site
+- Internship/full-time
+- Experience level
+- Match category
+- Technology
+- Date discovered
+
+---
+
+22. Email Notifications
+
+CareerScout should automatically send relevant job opportunities to the user's email.
+
+Email frequency may eventually include:
+
+- Daily digest
+- Weekly digest
+- Important/new-job alerts
+
+Example:
+
+CareerScout — Your Daily Job Matches
+
+5 new opportunities matched your profile.
+
+1. Backend Developer Intern
+   Match: 91%
+   Company: ABC
+
+2. Java Developer — Entry Level
+   Match: 87%
+   Company: XYZ
+
+3. Software Engineer Intern
+   Match: 83%
+   Company: DEF
+
+View all matches
+
+Each email should contain a link to the original application source.
+
+---
+
+23. Email Preferences
+
+Users should eventually be able to configure:
+
+- Email enabled/disabled
+- Frequency
+- Minimum relevance threshold
+- Preferred job categories
+- Maximum number of jobs per email
+
+---
+
+24. Saved Jobs
+
+Users should be able to save interesting jobs.
+
+Possible states:
+
+SAVED
+APPLYING
+APPLIED
+REJECTED
+INTERVIEW
+OFFER
+
+This allows CareerScout to eventually become more than a discovery engine and provide lightweight application tracking.
+
+---
+
+25. Application Tracking
+
+The initial system should not automatically submit applications.
+
+Instead, the system should provide:
+
+- Original application link
+- Application checklist
+- Relevant resume/profile information
+- User-controlled application status
+
+The user remains responsible for deciding whether and how to apply.
+
+---
+
+26. Automation
+
+CareerScout should run automatically.
+
+A scheduled workflow could look like:
+
+Scheduler
+   ↓
+Discover new jobs
+   ↓
+Normalize
+   ↓
+Deduplicate
+   ↓
+Extract requirements
+   ↓
+Match against users
+   ↓
+Store results
+   ↓
+Generate notifications
+   ↓
+Send email
+
+---
+
+27. MVP
+
+The first version should contain only the features necessary to prove the core concept.
+
+MVP includes:
+
+User
+
+- Registration/login
+- Profile
+- Resume upload
+
+Resume
+
+- Text extraction
+- Basic structured information extraction
+- User verification/editing
+
+Job Discovery
+
+- Selected permitted ATS/source integrations
+- Job ingestion
+- Normalization
+- Deduplication
+
+Matching
+
+- Skills
+- Experience
+- Education
+- Preferences
+- Required vs preferred requirements
+- Explainable match result
+
+Application Intelligence
+
+- Application requirements
+- Missing skills
+- Original application URL
+
+Automation
+
+- Scheduled discovery
+- Automatic matching
+
+Email
+
+- Relevant-job digest
+- User email preferences
+
+---
+
+28. Post-MVP Features
+
+Later versions may add:
+
+Advanced Resume Analysis
+
+- Better project analysis
+- Semantic skill recognition
+- Experience relevance
+- Resume quality suggestions
+
+Advanced Matching
+
+- Semantic matching
+- Skill equivalence
+- Context-aware experience matching
+
+More Sources
+
+Additional permitted ATS and job sources.
+
+Notifications
+
+- Email
+- Other notification channels
+
+Application Tracking
+
+A complete application pipeline.
+
+Analytics
+
+Examples:
+
+- Jobs discovered
+- Jobs matched
+- Applications made
+- Response rates
+
+---
+
+29. Non-Goals
+
+CareerScout will initially NOT:
+
+- Automatically submit applications without user control.
+- Bypass CAPTCHAs.
+- Bypass authentication.
+- Circumvent anti-bot protections.
+- Access private job databases without authorization.
+- Guarantee that a user is qualified.
+- Guarantee interviews or employment.
+- Misrepresent the user's qualifications.
+- Automatically alter a resume to falsely satisfy requirements.
+
+---
+
+30. Privacy Requirements
+
+The resume contains potentially sensitive personal information.
+
+CareerScout should therefore:
+
+- Protect uploaded resumes.
+- Avoid exposing resumes publicly.
+- Restrict access to user data.
+- Secure authentication credentials.
+- Minimize stored personal information.
+- Provide appropriate deletion mechanisms.
+- Avoid sending resume contents to external services unnecessarily.
+
+---
+
+31. Success Metrics
+
+The initial product should measure technical/product metrics such as:
+
+Discovery
+
+- Number of jobs successfully discovered.
+- Number of new jobs detected.
+- Duplicate rate.
+
+Matching
+
+- Percentage of jobs successfully analyzed.
+- Percentage with extracted requirements.
+- User-confirmed relevance.
+
+Notification
+
+- Emails successfully delivered.
+- Relevant opportunities per digest.
+- User interaction with recommendations.
+
+System
+
+- Job ingestion success rate.
+- Processing time.
+- API response time.
+- Error rate.
+
+---
+
+32. MVP Success Definition
+
+CareerScout MVP will be considered successful when a user can:
+
+Upload resume
+      ↓
+Confirm profile
+      ↓
+Set preferences
+      ↓
+System automatically discovers jobs
+      ↓
+System analyzes requirements
+      ↓
+System compares jobs against profile
+      ↓
+System identifies relevant jobs
+      ↓
+System explains matches and gaps
+      ↓
+System provides application checklist
+      ↓
+System sends relevant jobs by email
+      ↓
+User opens original application source
+
+with minimal manual job searching.
+
+---
+
+33. Product Principle
+
+The most important design principle is:
+
+«Automate discovery and analysis, not the user's judgment.»
+
+CareerScout should reduce repetitive work while keeping the user informed and in control.
+
+The system should always make it possible to understand:
+
+Where did this job come from?
+
+Why was it recommended?
+
+Which requirements match?
+
+Which requirements are missing?
+
+What do I need to apply?
+
+Where is the original application page?
+
+---
+
+34. Final Product Definition
+
+CareerScout is an automated personal career-discovery engine that continuously finds relevant opportunities from permitted original/ATS sources, converts job descriptions into structured requirements, compares them against the user's resume and preferences, provides explainable match and gap analysis, identifies application requirements, and delivers actionable job recommendations directly to the user's email.
